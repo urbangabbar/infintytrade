@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const atob = require('atob');
 const key = require('../sql/key');
 const bcrypt = require('bcrypt');
+const connection = require('../sql/connection');
 const saltRounds = 10;
 
 module.exports.signup = async function(req, res) {
@@ -9,16 +10,15 @@ module.exports.signup = async function(req, res) {
     var lname = req.body.last_name;
     var pass = req.body.password;
     var email = req.body.email;
-    var checkEmail = await checkifEmailExists(email);
-
-    if (!checkEmail) {
+    var emailExists = await checkifEmailExists(email);
+    if (emailExists.length) {
+        console.log(emailExists);
         res.status(401).send('User already exists');
     } else {
         bcrypt.genSalt(saltRounds, function(err, salt) {
             bcrypt.hash(pass, salt, function(err, hash) {
                 var sql = "INSERT INTO `login`(`first_name`,`last_name`,`email`,`password`) VALUES ('" + fname + "','" + lname + "','" + email + "','" + hash + "')";
-                console.log(sql)
-                var query = db.query(sql, function(err, result) {
+                var query = connection.query(sql, function(err, result) {
                     res.end(JSON.stringify(result));
                 });
             });
@@ -31,7 +31,7 @@ module.exports.signin = function(req, res) {
     var pass = req.body.password;
     var dec_pass = atob(pass);
     var sql = "SELECT id, first_name, last_name, email, password FROM `login` WHERE `email`='" + email + "'";
-    db.query(sql, function(err, results) {
+    connection.query(sql, function(err, results) {
         if (results != "") {
             var data = JSON.stringify(results);
             var secret = key.tokenKey;
@@ -95,6 +95,15 @@ module.exports.checkUser = function(req, res, next) {
 }
 
 function checkifEmailExists(email) {
-    var checkEmailSql = "SELECT id FROM `login` WHERE `email`='" + email + "'";
-    return db.query(checkEmailSql);
+    console.log('email aya');
+    return new Promise(function(resolve, reject) {
+        var checkEmailSql = "SELECT id FROM `login` WHERE `email`='" + email + "'";
+        console.log(checkEmailSql);
+        connection.query(checkEmailSql, (error, results) => {
+            if (error) {
+                throw error;
+            }
+            resolve(results);
+        });
+    });
 }
