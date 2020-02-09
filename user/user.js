@@ -96,8 +96,5 @@ module.exports.checkUser = function(req, res, next) {
 
 function checkifEmailExists(email) {
     var checkEmailSql = "SELECT id FROM `login` WHERE `email`='" + email + "'";
-    db.query(checkEmailSql, function(err, results) {
-        console.log(results);
-        return results;
-    });
+    return db.query(checkEmailSql);
 }
