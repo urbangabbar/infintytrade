@@ -4,20 +4,26 @@ const key = require('../sql/key');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
-module.exports.signup = function(req, res) {
+module.exports.signup = async function(req, res) {
     var fname = req.body.first_name;
     var lname = req.body.last_name;
     var pass = req.body.password;
     var email = req.body.email;
+    var checkEmail = await checkifEmailExists(email);
 
-    bcrypt.genSalt(saltRounds, function(err, salt) {
-        bcrypt.hash(pass, salt, function(err, hash) {
-            var sql = "INSERT INTO `login`(`first_name`,`last_name`,`email`,`password`) VALUES ('" + fname + "','" + lname + "','" + email + "','" + hash + "')";
-            var query = db.query(sql, function(err, result) {
-                res.end(JSON.stringify(result));
+    if (!checkEmail) {
+        res.status(401).send('User already exists');
+    } else {
+        bcrypt.genSalt(saltRounds, function(err, salt) {
+            bcrypt.hash(pass, salt, function(err, hash) {
+                var sql = "INSERT INTO `login`(`first_name`,`last_name`,`email`,`password`) VALUES ('" + fname + "','" + lname + "','" + email + "','" + hash + "')";
+                console.log(sql)
+                var query = db.query(sql, function(err, result) {
+                    res.end(JSON.stringify(result));
+                });
             });
         });
-    });
+    }
 };
 
 module.exports.signin = function(req, res) {
@@ -86,4 +92,12 @@ module.exports.checkUser = function(req, res, next) {
             }
         });
     }
+}
+
+function checkifEmailExists(email) {
+    var checkEmailSql = "SELECT id FROM `login` WHERE `email`='" + email + "'";
+    db.query(checkEmailSql, function(err, results) {
+        console.log(results);
+        return results;
+    });
 }
