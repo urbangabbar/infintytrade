@@ -4,8 +4,13 @@ const products = require('./product/product');
 const bodyParser = require('body-parser');
 const app = express();
 const port = 3000;
-
+app.use(express.static(__dirname + '/ui-parcel/dist/'));
 app.use(user.checkUser);
+
+app.get('/', function(req, res){
+    console.log(__dirname);
+    res.sendFile(__dirname + "/ui-parcel/dist/index.html");
+});
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");

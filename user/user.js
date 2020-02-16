@@ -81,7 +81,7 @@ module.exports.signin = function(req, res) {
 };
 
 module.exports.checkUser = function(req, res, next) {
-    if ((req._parsedUrl.pathname).startsWith("/api/user")) {
+    if ((req._parsedUrl.pathname).startsWith("/api/user")|| req._parsedUrl.pathname =='/') {
         next();
     } else {
         jwt.verify(req.get('bearer'), key.tokenKey, function(err, decoded) {
